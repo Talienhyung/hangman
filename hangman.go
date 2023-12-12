@@ -1,15 +1,16 @@
 package hangman
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
+	"log"
+	"math/rand"
 	"os"
 	"os/exec"
-	"math/rand"
 	"unicode/utf8"
-	"encoding/json"
+
 	"github.com/nsf/termbox-go"
-	"log"
-	"bufio"
 )
 
 type HangManData struct {
@@ -31,7 +32,6 @@ type Game struct {
 	letterFile string // Name of the file given after --letter (-l) where the ascii art is stored
 	dico       string // First argument given, contains the name of the file containing the desired dictionary
 }
-
 
 // Display a manual for the utilisation of argument
 func Help() {
@@ -70,7 +70,7 @@ func Rules() {
 }
 
 // Set HangManData's first value
-func (hangman *HangManData) setData() {
+func (hangman *HangManData) SetData() {
 	hangman.Word = []rune{}
 	hangman.ToFind = ""
 	hangman.Attempts = 10
@@ -163,7 +163,6 @@ func (game *HangManData) IsThisTheWord(word string) bool {
 	return true
 }
 
-
 // Adds the rune passed as a parameter to ListLetter if it's not already there
 func (game *HangManData) UsedLetter(oneRune rune) {
 	if oneRune < 'A' || oneRune > 'Z' { // Make the letter uppercase if it isn't already
@@ -213,7 +212,6 @@ func (game *HangManData) UsedVerif(intput string) bool {
 	return false
 }
 
-
 // Saves the party's progress, which is stored in the HangManData structure
 func (data HangManData) Save(filename string) error {
 	file, err := os.Create(filename) // Create a file
@@ -248,9 +246,8 @@ func Load(filename string) (HangManData, error) {
 	return data, nil
 }
 
-
 // Draw a box in x, y with size width/height, color borderColor with title in terminal
-func drawBox(x, y, width, height int, borderColor termbox.Attribute, title string) {
+func DrawBox(x, y, width, height int, borderColor termbox.Attribute, title string) {
 	// Draw the box frame
 	for i := x; i < x+width; i++ {
 		termbox.SetCell(i, y, '─', borderColor, termbox.ColorDefault)
@@ -276,29 +273,29 @@ func drawBox(x, y, width, height int, borderColor termbox.Attribute, title strin
 // Main display, efficient for all boxes and hangman
 func (hang *HangManData) display() {
 	// Main box
-	drawBox(0, 0, 100, 24, termbox.ColorWhite, "main")
+	DrawBox(0, 0, 100, 24, termbox.ColorWhite, "main")
 
 	// First box inside the main box
-	drawBox(55, 0, 45, 15, termbox.ColorLightYellow, "Hangman")
+	DrawBox(55, 0, 45, 15, termbox.ColorLightYellow, "Hangman")
 	// HangMan in the first box
 	if hang.HangmanPositions >= 0 && hang.HangmanPositions <= 9 {
 		hang.DisplayHangman(55+18, 4, termbox.ColorBlue)
 	}
 
 	// Second box inside the main box
-	drawBox(0, 0, 50, 8, termbox.ColorBlue, "Word...")
-	drawBox(25, 0, 25, 8, termbox.ColorBlue, "Attempts")
+	DrawBox(0, 0, 50, 8, termbox.ColorBlue, "Word...")
+	DrawBox(25, 0, 25, 8, termbox.ColorBlue, "Attempts")
 
 	// Third box inside the main box
-	drawBox(0, 8, 50, 8, termbox.ColorGreen, "Letter")
+	DrawBox(0, 8, 50, 8, termbox.ColorGreen, "Letter")
 
 	// Fourth box inside the main box
-	drawBox(0, 16, 50, 8, termbox.ColorLightMagenta, "Used letter/words")
+	DrawBox(0, 16, 50, 8, termbox.ColorLightMagenta, "Used letter/words")
 }
 
 // drawText is a function that draws text
 // It takes a slice of runes (text), x and y coordinates, a color attribute, and a cursor flag.
-func drawText(text []rune, x, y int, color termbox.Attribute, cursor bool) {
+func DrawText(text []rune, x, y int, color termbox.Attribute, cursor bool) {
 	// Initialize variables to track line and space offsets
 	ligne := 0
 	space := 0
@@ -336,7 +333,7 @@ func drawText(text []rune, x, y int, color termbox.Attribute, cursor bool) {
 
 // Display HangMan on the right position
 func (hang *HangManData) DisplayHangman(x, y int, borderColor termbox.Attribute) {
-	hangMan := readHang("Ressources/HangMan_Position/hangman.txt")
+	hangMan := ReadHang("Ressources/HangMan_Position/hangman.txt")
 	for i := 0; i <= 7; i++ { // Display ligne by ligne
 		runes := []rune(hangMan[hang.HangmanPositions][i])
 		for index, j := range runes { // Display rune by rune
@@ -344,7 +341,6 @@ func (hang *HangManData) DisplayHangman(x, y int, borderColor termbox.Attribute)
 		}
 	}
 }
-
 
 // TermBoxGame is a function that handles the main game loop for a Hangman game using the termbox library.
 // It takes the HangManData and Game structs as input parameters.
@@ -364,17 +360,17 @@ func (HangMan HangManData) TermBoxGame(game Game) {
 	for {
 		// Clear the screen and set up user interface
 		termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-		game.asciiBox(word)
+		game.AsciiBox(word)
 		game.AsciiCounter(HangMan.Attempts)
 
 		HangMan.display()
 
 		// Display text
-		drawText([]rune(userInput), 2, 10, termbox.ColorDefault, true)
-		drawText(HangMan.Word, 2, 4, termbox.ColorDefault, false)
-		drawText(HangMan.ListLetter, 2, 17, termbox.ColorDefault, false)
+		DrawText([]rune(userInput), 2, 10, termbox.ColorDefault, true)
+		DrawText(HangMan.Word, 2, 4, termbox.ColorDefault, false)
+		DrawText(HangMan.ListLetter, 2, 17, termbox.ColorDefault, false)
 		for i := range HangMan.ListWord {
-			drawText([]rune(HangMan.ListWord[i]), 2, 18+i, termbox.ColorDefault, false)
+			DrawText([]rune(HangMan.ListWord[i]), 2, 18+i, termbox.ColorDefault, false)
 		}
 		termbox.Flush()
 
@@ -387,7 +383,7 @@ func (HangMan HangManData) TermBoxGame(game Game) {
 				if !gameOver {
 					if userInput != "" && !HangMan.UsedVerif(userInput) && userInput != empty {
 						// Check if the user's input is a valid guess and update the word or game status
-						if HangMan.mainMecanics(userInput) {
+						if HangMan.MainMecanics(userInput) {
 							word = "win"
 							gameOver = true
 						} else {
@@ -417,7 +413,7 @@ func (HangMan HangManData) TermBoxGame(game Game) {
 		}
 
 		// Check if the game has ended
-		if HangMan.endGame() {
+		if HangMan.EndGame() {
 			if HangMan.Attempts <= 0 {
 				word = "lose"
 				HangMan.Word = []rune(HangMan.ToFind)
@@ -429,21 +425,20 @@ func (HangMan HangManData) TermBoxGame(game Game) {
 	}
 }
 
-
 // This is the hangman Ascii game
 func (game HangManData) AsciiGame(data Game) {
 	var inputs string
 	gameOver := false
 	fmt.Printf("Good Luck, you have %d attempts.\n", game.Attempts)
-	data.displayAsciiText(game.Word)
+	data.DisplayAsciiText(game.Word)
 
 	for !gameOver { // Game loop
 		// Display input
-		letter := input("\nChoose : ", inputs)
+		letter := Input("\nChoose : ", inputs)
 
 		// Verify input
 		if letter != "" && !game.UsedVerif(letter) {
-			if game.mainMecanics(letter) {
+			if game.MainMecanics(letter) {
 				gameOver = true
 			}
 
@@ -452,9 +447,9 @@ func (game HangManData) AsciiGame(data Game) {
 			}
 
 			// Display AsciiText and HangMan
-			data.displayAsciiText(game.Word)
+			data.DisplayAsciiText(game.Word)
 			if game.HangmanPositions >= 0 {
-				game.displayHangmanClassic()
+				game.DisplayHangmanClassic()
 			}
 
 		} else {
@@ -462,7 +457,7 @@ func (game HangManData) AsciiGame(data Game) {
 		}
 
 		// Verify if it's the end of the game
-		if game.endGame() {
+		if game.EndGame() {
 			gameOver = true
 		}
 	}
@@ -475,19 +470,18 @@ func (game HangManData) AsciiGame(data Game) {
 	}
 }
 
-
 // Displays a given ascii character in x y
-func (data *Game) displayAscii(x, y, version int, borderColor termbox.Attribute) {
+func (data *Game) DisplayAscii(x, y, version int, borderColor termbox.Attribute) {
 	var ascii [95][9]string
 	switch data.letterFile { //choose the right font for ascii art
 	case "shadow.txt":
-		ascii = readAscii("Ressources/Ascii_Letter/shadow.txt")
+		ascii = ReadAscii("Ressources/Ascii_Letter/shadow.txt")
 	case "standard.txt":
-		ascii = readAscii("Ressources/Ascii_Letter/standard.txt")
+		ascii = ReadAscii("Ressources/Ascii_Letter/standard.txt")
 	case "thinkertoy.txt":
-		ascii = readAscii("Ressources/Ascii_Letter/thinkertoy.txt")
+		ascii = ReadAscii("Ressources/Ascii_Letter/thinkertoy.txt")
 	default:
-		ascii = readAscii("Ressources/Ascii_Letter/standard.txt")
+		ascii = ReadAscii("Ressources/Ascii_Letter/standard.txt")
 	}
 	for i := 0; i <= 8; i++ { //displays the correct character
 		runes := []rune(ascii[version-32][i])
@@ -498,43 +492,43 @@ func (data *Game) displayAscii(x, y, version int, borderColor termbox.Attribute)
 }
 
 // Displays the last letter entered by a user in the terminal, followed by the final result (win or lose).
-func (data *Game) asciiBox(word string) {
+func (data *Game) AsciiBox(word string) {
 	switch word {
 	case "win": //display WIN if player win
-		data.displayAscii(55+19, 15, 'I', termbox.ColorGreen)
-		data.displayAscii(59, 15, 'W', termbox.ColorGreen)
-		data.displayAscii(55+16+11, 15, 'N', termbox.ColorGreen)
+		data.DisplayAscii(55+19, 15, 'I', termbox.ColorGreen)
+		data.DisplayAscii(59, 15, 'W', termbox.ColorGreen)
+		data.DisplayAscii(55+16+11, 15, 'N', termbox.ColorGreen)
 	case "lose": //display lose if player lose
-		data.displayAscii(56, 15, 'L', termbox.ColorRed)
-		data.displayAscii(55+11, 15, 'O', termbox.ColorRed)
-		data.displayAscii(55+16+5, 15, 'S', termbox.ColorRed)
-		data.displayAscii(55+16+14, 15, 'E', termbox.ColorRed)
+		data.DisplayAscii(56, 15, 'L', termbox.ColorRed)
+		data.DisplayAscii(55+11, 15, 'O', termbox.ColorRed)
+		data.DisplayAscii(55+16+5, 15, 'S', termbox.ColorRed)
+		data.DisplayAscii(55+16+14, 15, 'E', termbox.ColorRed)
 	default: //displays the first rune of the last input
 		runes := []rune(word)
 		if int(runes[0]) > 33 && int(runes[0]) < 126 {
-			data.displayAscii(55+16, 15, int(runes[0]), termbox.ColorLightRed)
+			data.DisplayAscii(55+16, 15, int(runes[0]), termbox.ColorLightRed)
 		} else {
-			data.displayAscii(55+16, 15, '/', termbox.ColorLightRed)
+			data.DisplayAscii(55+16, 15, '/', termbox.ColorLightRed)
 		}
 	}
 }
 
-// displayAsciiText displays ASCII art text using the 'letterFile' font.
+// DisplayAsciiText displays ASCII art text using the 'letterFile' font.
 // The function selects the font based on 'letterFile' and displays the ASCII art text.
-func (data *Game) displayAsciiText(words []rune) {
+func (data *Game) DisplayAsciiText(words []rune) {
 	// Define a 2D array 'ascii' to hold ASCII art characters.
 	var ascii [95][9]string
 
 	// Select the font for the ASCII art based on the 'letterFile' field.
 	switch data.letterFile {
 	case "shadow.txt":
-		ascii = readAscii("Ressources/Ascii_Letter/shadow.txt")
+		ascii = ReadAscii("Ressources/Ascii_Letter/shadow.txt")
 	case "standard.txt":
-		ascii = readAscii("Ressources/Ascii_Letter/standard.txt")
+		ascii = ReadAscii("Ressources/Ascii_Letter/standard.txt")
 	case "thinkertoy.txt":
-		ascii = readAscii("Ressources/Ascii_Letter/thinkertoy.txt")
+		ascii = ReadAscii("Ressources/Ascii_Letter/thinkertoy.txt")
 	default:
-		ascii = readAscii("Ressources/Ascii_Letter/standard.txt")
+		ascii = ReadAscii("Ressources/Ascii_Letter/standard.txt")
 	}
 
 	// Loop through each line of the ASCII art (9 lines in total).
@@ -553,19 +547,18 @@ func (data *Game) displayAsciiText(words []rune) {
 func (data Game) AsciiCounter(attempts int) {
 	switch attempts {
 	case 1:
-		data.displayAscii(35, -1, '1', termbox.ColorLightGray)
+		data.DisplayAscii(35, -1, '1', termbox.ColorLightGray)
 	case 10:
-		data.displayAscii(33, -1, '1', termbox.ColorLightGray)
-		data.displayAscii(36, -1, '0', termbox.ColorLightGray)
+		data.DisplayAscii(33, -1, '1', termbox.ColorLightGray)
+		data.DisplayAscii(36, -1, '0', termbox.ColorLightGray)
 	default:
-		data.displayAscii(34, -1, attempts+'0', termbox.ColorLightGray)
+		data.DisplayAscii(34, -1, attempts+'0', termbox.ColorLightGray)
 	}
 }
 
-
 // Displays the hangman in the terminal
-func (hang HangManData) displayHangmanClassic() {
-	hangMan := readHang("Ressources/HangMan_Position/hangman.txt")
+func (hang HangManData) DisplayHangmanClassic() {
+	hangMan := ReadHang("Ressources/HangMan_Position/hangman.txt")
 	fmt.Println("")
 	for i := 0; i <= 7; i++ {
 		fmt.Println(hangMan[hang.HangmanPositions][i])
@@ -573,7 +566,7 @@ func (hang HangManData) displayHangmanClassic() {
 }
 
 // displays the rune array given as a parameter in the terminal
-func printRune(tab []rune) {
+func PrintRune(tab []rune) {
 	for _, runes := range tab {
 		fmt.Print(string(runes))
 		fmt.Print(" ")
@@ -582,27 +575,26 @@ func printRune(tab []rune) {
 }
 
 // return user input
-func input(s string, inputs string) string {
+func Input(s string, inputs string) string {
 	fmt.Print(s)
 	fmt.Scanln(&inputs)
 	return inputs
 }
-
 
 // This is the hangman classic game
 func (game HangManData) ClassicGame() {
 	var inputs string
 	gameOver := false
 	fmt.Printf("Good Luck, you have %d attempts.\n", game.Attempts)
-	printRune(game.Word)
+	PrintRune(game.Word)
 
 	for !gameOver { // Game loop
 		// Display word and attempts
-		letter := input("\nChoose : ", inputs)
+		letter := Input("\nChoose : ", inputs)
 
 		// Verify input
 		if letter != "" && !game.UsedVerif(letter) {
-			if game.mainMecanics(letter) {
+			if game.MainMecanics(letter) {
 				gameOver = true
 			}
 
@@ -611,13 +603,13 @@ func (game HangManData) ClassicGame() {
 			}
 
 			// Display words and HangMan
-			printRune(game.Word)
+			PrintRune(game.Word)
 			if game.HangmanPositions >= 0 {
-				game.displayHangmanClassic()
+				game.DisplayHangmanClassic()
 			}
 
 			// Verify if it's the end of the game
-			if game.endGame() {
+			if game.EndGame() {
 				gameOver = true
 			}
 		} else {
@@ -632,7 +624,6 @@ func (game HangManData) ClassicGame() {
 		fmt.Println("The word was " + game.ToFind + ". You'll do better next time!!!")
 	}
 }
-
 
 // Handling arguments and adding values to Game structure parameters
 func SortArguments() Game {
@@ -738,7 +729,7 @@ func ExploitingArgument(game Game) {
 			os.Exit(2)
 		}
 	} else {
-		data.setData()
+		data.SetData()
 		dico := ReadTheDico(game.dico)
 		data.SetWord(dico)
 	}
@@ -762,9 +753,8 @@ func ExploitingArgument(game Game) {
 	data.TermBoxGame(game) // If no mode is launched, the default mode is TermboxGame
 }
 
-
 // This function reads the given ascii file and returns a [95][9]string containing the ascii art characters.
-func readAscii(fichier string) [95][9]string {
+func ReadAscii(fichier string) [95][9]string {
 	var ascii [95][9]string
 
 	readFile, err := os.Open(fichier)
@@ -793,7 +783,7 @@ func readAscii(fichier string) [95][9]string {
 }
 
 // This function reads the given hangman file and returns a [10][8]string containing the hangman position.
-func readHang(fichier string) [10][8]string {
+func ReadHang(fichier string) [10][8]string {
 	var hangman [10][8]string
 
 	readFile, err := os.Open(fichier)
@@ -825,7 +815,7 @@ func readHang(fichier string) [10][8]string {
 //########### Dictionary function ##################
 
 // The readfile function returns an array of strings containing all the words in a dictionary
-func readFile(fichier string) []string {
+func ReadFile(fichier string) []string {
 	var dictio []string
 
 	readFile, err := os.Open(fichier)
@@ -849,7 +839,7 @@ func readFile(fichier string) []string {
 }
 
 // The listDictio function returns all files in the Dictinonary directory
-func listDictio() []string {
+func ListDictio() []string {
 	var listDico []string
 	entries, err := os.ReadDir("Ressources/Dictionary/")
 	if err != nil {
@@ -863,11 +853,11 @@ func listDictio() []string {
 }
 
 // The ReadAllDico function returns an array of strings containing all the words in the various files in the dictionary folder.
-func readAllDico() []string {
-	listDico := listDictio()
+func ReadAllDico() []string {
+	listDico := ListDictio()
 	var dico []string
 	for i := 0; i < len(listDico); i++ {
-		newDico := readFile("Ressources/Dictionary/" + listDico[i])
+		newDico := ReadFile("Ressources/Dictionary/" + listDico[i])
 		dico = append(dico, newDico...)
 	}
 	return dico
@@ -875,26 +865,25 @@ func readAllDico() []string {
 
 // This function returns an array of words, depending on the file entered as a parameter only if the file exists, otherwise it uses the other files.
 func ReadTheDico(file string) []string {
-	listDico := listDictio()
+	listDico := ListDictio()
 	if listDico == nil {
 		fmt.Println("No file in Dictionary")
 		os.Exit(3)
 	}
 	for _, j := range listDico { // Check if the requested dictionary exists
 		if file == j {
-			dico := readFile("Ressources/Dictionary/" + file)
+			dico := ReadFile("Ressources/Dictionary/" + file)
 			return dico
 		}
 	}
 	fmt.Println("Unspecified or unrecognized dictionaries (i.e. words chosen at random from all dictionaries)\nPress enter to accept, otherwise ^C")
 	var inputs string
 	fmt.Scanln(&inputs)
-	return readAllDico()
+	return ReadAllDico()
 }
 
-
 // Main mecanic of the game which gathers several functions, return true if the game is finished, otherwise false.
-func (hang *HangManData) mainMecanics(input string) bool {
+func (hang *HangManData) MainMecanics(input string) bool {
 	if utf8.RuneCountInString(input) > 1 { // If it's a word
 		if hang.IsThisTheWord(input) {
 			hang.Word = []rune(hang.ToFind)
@@ -932,7 +921,7 @@ func (hang *HangManData) mainMecanics(input string) bool {
 }
 
 // Check if the game is finished or not
-func (game *HangManData) endGame() bool {
+func (game *HangManData) EndGame() bool {
 	if game.Attempts <= 0 { // No more attempts
 		return true
 	}
