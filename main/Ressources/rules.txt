@@ -1,0 +1,32 @@
+Welcome to the rules of the Hangman game!
+
+The rules are simple!
+
+Objective of the game:
+Your mission, if you accept it, is to guess the mystery word before you hang!
+
+How it works :
+
+A secret word will be chosen at random from those you've provided (argument file see --help). 
+
+To put you on the right track, some letters of this secret word will be revealed. 
+
+Your Super Power:
+You have the power to suggest letters. You can suggest 10 different letters. When you suggest a valid letter, all the corresponding letters in the secret word will be revealed. 
+
+But be careful, every mistake will bring you closer to the hanged man! If you're brave enough to propose a complete word and it's not the right one, you'll lose two chances. Don't play too close to the fire - you could get burned!
+
+  +---+  
+  |   |  
+  O   |  
+ /|\  |  
+ / \  |  
+      |  
+=========
+
+So let the game begin!
+
+
+Note : 
+To quit the game enter QUIT
+To save and exit the game enter STOP
